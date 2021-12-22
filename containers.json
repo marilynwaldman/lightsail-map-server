@@ -1,6 +1,6 @@
 {
     "proxy": {
-        "image": ":static-map-service.nginx-container.33",
+        "image": ":static-map-service.nginx-container.34",
         "ports": {
             "80": "HTTP"
         },
