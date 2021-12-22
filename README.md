@@ -6,16 +6,18 @@ https://towardsdatascience.com/how-to-deploy-ml-models-using-flask-gunicorn-ngin
 
 and was deployed to ligntsail ec2 here:
 
-https://github.com/marilynwaldman/flask_gunicorn_nginx_docker/blob/main/flask_app/__init__.py
-
-
 
 # map implementation 
-This will run from ec2 as docker images have to be uploaded to lightsail to create a deployment.  This fails on macs with m1 processors.
+This will run from ec2 because docker images have to be uploaded to lightsail to create a deployment.  This fails on macs with apple processors.
 
 1.  create an ubuntu ec2 instance (on lightsail)
-  on lightsail create a static ip address - 52.12.20.202
-2.  install docker via docker-compose
+  on lightsail create a static ip address - xx.xx.xxx.xxx.
+2.  ssh to this instance from you local machine
+```
+ssh -i <your key> ubuntu@xx.xx.xxx.xxx
+```
+
+ install docker via docker-compose on the ec2 instance
 
 ```
 sudo apt update
@@ -41,6 +43,8 @@ sudo ./aws/install
 
 configure aws:
 https://docs.aws.amazon.com/cli/latest/userguide/getting-started-quickstart.html
+the parameter for the configure are given to you.
+
 ```
 sudo aws configure
 
@@ -66,6 +70,97 @@ sudo chmod +x /usr/local/bin/lightsailctl
 
 
 ```
+
+5.  Clone this repository on the ec2 instance:
+
+```
+git clone https://github.com/marilynwaldman/lightsail-map-server.git
+cd lightsail-map-server
+
+```
+
+6.  The .html files for the existing maps cannot be uploaed to github because of their size.  scp them to the ec2 instance from you local machine.  This is a get-around until it is decided how to implement a persistant store.
+
+From your local machine.  Substitute  '/Users/marilynwaldman' with your home path
+
+```
+cd /
+pwd
+``
+
+get your home path
+
+```
+
+scp -i <your key> \
+ <home path>/lightsail-map-server/flask/static/*.html \
+      ubuntu@xx.xx.xx.xx:~/lightsail-map-server/flask/static/
+```
+
+7.  The map server will run on a separate lightsail container.  Delete an existing container if it exists.  Log into your lightsail console to see if a service is running
+
+```
+sudo aws lightsail delete-container-service --service-name static-map-service
+``
+
+Wait for the completion of this task before continuting.
+
+8.  Build the docker images of the flask app and nginx on the ec2 instance.
+
+cd to the repo and run the docker build commands.  These steps are formally discussed below.
+
+```
+cd  lightsail-map-server
+sudo docker build -t flask-container ./flask
+sudo docker build -t nginx-container ./nginx
+
+
+```
+
+9.  Create the static map service on lightsail from the ec2 instance
+
+
+```
+sudo aws lightsail create-container-service --service-name static-map-service \
+--power small \
+--scale 1
+```
+
+Use the get-container-services command to monitor the state of the container as it is being created.  
+
+Also log into the lightsail console and check container services.
+
+```
+sudo aws lightsail get-container-services --service-name static-map-service
+```
+
+10. Push the Flask application container to Lightsail with the push-container-image command.
+```
+sudo aws lightsail push-container-image --service-name static-map-service \
+--label flask-container \
+--image flask-container
+```
+
+```
+sudo aws lightsail push-container-image --service-name static-map-service \
+--label nginx-container \
+--image nginx-container
+
+
+```
+
+From the lightsail console get the number of the images uploaded and update the containers.json file:
+
+Either vi the ec2 file or update locally, push to github and pull on ec2.
+
+
+
+
+
+
+
+
+
 
 
 
