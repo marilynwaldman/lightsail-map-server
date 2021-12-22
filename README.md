@@ -154,6 +154,16 @@ From the lightsail console get the number of the images uploaded and update the 
 Either vi the ec2 file or update locally, push to github and pull on ec2.
 
 
+11.  Deploy the containers:
+
+Deploy the containers to the container service with the AWS CLI using the create-container-service-deployment command.
+
+```
+sudo aws lightsail create-container-service-deployment --service-name static-map-service \
+--containers file://containers.json \
+--public-endpoint file://public-endpoint.json
+
+```
 
 
 
